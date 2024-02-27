@@ -8,127 +8,139 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Login Form',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+      home: Scaffold(
+        appBar: AppBar(
+            title: Text('loginForm '),
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [Colors.black, Colors.blue],
+                ),
+              ),
+            )),
+        body: MyForm(),
       ),
-      home: LoginForm(),
     );
   }
 }
 
-class LoginForm extends StatefulWidget {
+class MyForm extends StatefulWidget {
   @override
-  _LoginFormState createState() => _LoginFormState();
+  _MyFormState createState() => _MyFormState();
 }
 
-class _LoginFormState extends State<LoginForm> {
+class _MyFormState extends State<MyForm> {
   final _formKey = GlobalKey<FormState>();
-  bool _isObscured = true;
-  IconData _visibilityIcon = Icons.visibility_off;
-  String _gender = 'Male'; // Définir une valeur par défaut
+  bool _termsChecked = false;
+  String? _password;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Login Form'),
-      ),
-      body: Padding(
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty ?? true) {
-                    return 'Please enter your email';
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            TextFormField(
+              decoration: InputDecoration(labelText: 'first name'),
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return 'Non obligatwa';
+                } else if (value.length < 2) {
+                  return 'Non dwe gen omwen 2 karakter';
+                }
+                return null;
+              },
+            ),
+            TextFormField(
+              decoration: InputDecoration(labelText: 'last name'),
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return 'Prenon obligatwa';
+                } else if (value.length < 2) {
+                  return 'Prenon dwe gen omwen 2 karakter';
+                }
+                return null;
+              },
+            ),
+            TextFormField(
+              decoration: InputDecoration(labelText: 'Email'),
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return 'Email obligatwa';
+                } else if (!_isValidEmail(value)) {
+                  return 'Email pa valide';
+                }
+                return null;
+              },
+            ),
+            TextFormField(
+              decoration: InputDecoration(labelText: 'password'),
+              obscureText: true,
+              onChanged: (value) {
+                _password = value;
+              },
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return 'password mandatory';
+                }
+                return null;
+              },
+            ),
+            TextFormField(
+              decoration: InputDecoration(labelText: 'confirm password'),
+              obscureText: true,
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return 'for confirm password mandatory';
+                } else if (value != _password) {
+                  return 'your confirmation does not match';
+                }
+                return null;
+              },
+            ),
+            CheckboxListTile(
+              title: Text("I totally agree."),
+              value: _termsChecked,
+              onChanged: (bool? value) {
+                setState(() {
+                  _termsChecked = value!;
+                });
+              },
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (!_termsChecked) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'you must check theses conditions before submitting.')),
+                  );
+                } else {
+                  if (_formKey.currentState!.validate()) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Submitting Form')),
+                    );
+                    _formKey.currentState!.reset();
+                    _termsChecked = false;
                   }
-                  if (value == null ||
-                      !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                          .hasMatch(value!)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16.0),
-              TextFormField(
-                obscureText: _isObscured,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  suffixIcon: IconButton(
-                    icon: Icon(_visibilityIcon),
-                    onPressed: _toggleVisibility,
-                  ),
-                ),
-                validator: (value) {
-                  if (value != null &&
-                      !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                          .hasMatch(value!)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16.0),
-              Row(
-                children: <Widget>[
-                  Text('Gender: '),
-                  Radio(
-                    value: 'Male',
-                    groupValue: _gender,
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _gender = value;
-                        });
-                      }
-                    },
-                  ),
-                  Text('Male'),
-                  Radio(
-                    value: 'Female',
-                    groupValue: _gender,
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _gender = value;
-                        });
-                      }
-                    },
-                  ),
-                  Text('Female'),
-                ],
-              ),
-              SizedBox(height: 16.0),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState != null &&
-                        _formKey.currentState!.validate()) {
-                      // Submit form data
-                    }
-                  },
-                  child: Text('Submit'),
-                ),
-              ),
-            ],
-          ),
+                }
+              },
+              child: Text('ok'),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _toggleVisibility() {
-    setState(() {
-      _isObscured = !_isObscured;
-      _visibilityIcon = _isObscured ? Icons.visibility_off : Icons.visibility;
-    });
+  bool _isValidEmail(String email) {
+    return RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+        .hasMatch(email);
   }
 }
